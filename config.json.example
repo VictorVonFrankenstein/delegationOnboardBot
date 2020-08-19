@@ -1,0 +1,21 @@
+{
+   "referrerAccount":"dappacc",
+   "delegationAccount":"delegationacc",
+   "adminAccount":"adminacc",
+   "delegationAmount":10,
+   "delegationLength":60,
+   "beneficiaryRemoval":true,
+   "minPostRC":10,
+   "muteAccount":"muteacc",
+   "hpWarning":100,
+   "maxUserHP":20,
+   "notifyUser":true,
+   "delegationMsg":"You received a new delegation",
+   "delegationLengthMsg":"Delegation period has been expired",
+   "delegationMuteMsg":"Delegation is removed due to bad behavior",
+   "delegationBeneficiaryMsg":"Delegation is removed as you are not following the open standard of hiveonboard",
+   "delegationMaxMsg":"Great, you managed it to increase your HIVE power by your own, the delegation is removed therefore.",
+   "no_broadcast":false,
+   "print_log_at_block":100,
+   "wallet_password":"your_wallet_pass"
+}
