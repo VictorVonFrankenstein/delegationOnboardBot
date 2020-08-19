@@ -11,6 +11,17 @@ Delegated HP is revoked when:
 * the account was muted by an defined account
 * the account do not set the referreer as beneficiaries 
 
+### Remarks
+* I added referrerAccount to the config, so that delegationAccount can be different from the dapp account
+* delegationAccount sends out the transfers (so that only one active key is necessary)
+* beneficiaryRemoval is only applied on posts and not on comments
+* account activity is only checked for new activity (beginning from time when the bot is started)
+* Owned HP is used for maxUserHP 
+* The hiveonboard API is used to initialize all referred accounts
+* Active delegation is checked by database_api.list_vesting_delegations
+* Active key is stored in the beem wallet
+* If notifyUser is false, a user will never receive a transfer memo
+
 ## Installation of packages for Ubuntu
 
 ```
@@ -21,7 +32,7 @@ sudo apt-get install python3-pip build-essential libssl-dev python3-dev
 
 Clone the git and install the package by
 ```
-pip3 install beem hiveengine
+pip3 install beem
 git clone https://github.com/holgern/delegationonboardbot.git
 cd delegationonboardbot
 python3 setup.py install
