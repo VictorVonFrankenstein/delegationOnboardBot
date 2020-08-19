@@ -380,7 +380,7 @@ def main():
     nodelist = NodeList()
     nodelist.update_nodes()
     hive = Hive(node=nodelist.get_hive_nodes(), num_retries=5, call_num_retries=3, timeout=15)
-    
+    blockchain = Blockchain(blockchain_instance=hive)
     logger.info(str(hive))
     data_file = os.path.join(datadir, 'data.db')
     bot = DelegationOnboardBot(
@@ -402,6 +402,8 @@ def main():
         logger.info("Start block_num: %d" % start_block)
         
         stop_block = start_block + 100
+        if stop_block > blockchain.get_current_block_num():
+            stop_block = blockchain.get_current_block_num()
     else:
         start_block = None
         stop_block = None
@@ -425,6 +427,9 @@ def main():
         start_block = last_block_num + 1
         
         stop_block = start_block + 100
+        if stop_block > blockchain.get_current_block_num():
+            stop_block = blockchain.get_current_block_num()        
+        
         store_data(data_file, "last_block_num", last_block_num)
         time.sleep(3)
 
