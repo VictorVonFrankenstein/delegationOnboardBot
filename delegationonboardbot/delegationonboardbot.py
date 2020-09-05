@@ -62,11 +62,23 @@ class DelegationOnboardBot:
                             "delegationMaxMsg"]
         
         check_config(self.config, necessary_fields, self.hive)
+        self.hive.wallet.unlock(self.config["wallet_password"])           
         self.onboard_api = "https://hiveonboard.com/api/referrer/%s" % self.config["referrerAccount"]
         self.blockchain = Blockchain(mode='head', blockchain_instance=self.hive)
         self.muted_acc = Account(self.config["muteAccount"], blockchain_instance=self.hive)
         self.delegation_acc = Account(self.config["delegationAccount"], blockchain_instance=self.hive)
         self.muted_accounts = self.muted_acc.get_mutings(limit=1000)
+
+        active_key = False
+        for key in self.delegation_acc["active"]["key_auths"]:
+            if key[0] in self.hive.wallet.getPublicKeys(current=True):
+                active_key = True
+        for key in self.delegation_acc["owner"]["key_auths"]:
+            if key[0] in self.hive.wallet.getPublicKeys(current=True):
+                active_key = True            
+        if not active_key:
+            logger.warn("Active key from %s is not stored into the beempy wallet." % self.delegation_acc["name"])
+
         rc = RC(blockchain_instance=self.hive)
         self.comment_rc_costs = rc.comment(tx_size=4000, permlink_length=40, parent_permlink_length=0)
         self.accounts = self.get_referrer(accounts)
@@ -161,6 +173,8 @@ class DelegationOnboardBot:
         if self.config["no_broadcast"]:
             logger.info("no_broadcast=True, Would send to %s the following message: %s" % (self.config["adminAccount"], msg))
             return
+        if self.delegation_acc.blockchain.wallet.locked():
+            self.delegation_acc.blockchain.wallet.unlock(self.config["wallet_password"])
         logger.info("Send to %s the following message: %s" % (self.config["adminAccount"], msg))
         self.delegation_acc.transfer(self.config["adminAccount"], 0.001, "HIVE", memo=msg)
 
@@ -171,6 +185,8 @@ class DelegationOnboardBot:
         if self.config["no_broadcast"]:
             logger.info("no_broadcast=True, Would send to %s the following message: %s" % (account, msg))
             return
+        if self.delegation_acc.blockchain.wallet.locked():
+            self.delegation_acc.blockchain.wallet.unlock(self.config["wallet_password"])        
         logger.info("Send to %s the following message: %s" % (account, msg))
         self.delegation_acc.transfer(account, 0.001, "HIVE", memo=msg)
 
@@ -239,6 +255,8 @@ class DelegationOnboardBot:
         if self.config["no_broadcast"]:
             logger.info("no_broadcast = True, Would remove delegation from %s" % (account))
             return False
+        if self.delegation_acc.blockchain.wallet.locked():
+            self.delegation_acc.blockchain.wallet.unlock(self.config["wallet_password"])        
         logger.info("remove delegation from %s" % (account))
         try:
             self.delegation_acc.delegate_vesting_shares(account, 0)
@@ -254,6 +272,8 @@ class DelegationOnboardBot:
         if self.config["no_broadcast"]:
             logger.info("no_broadcast = True, Would add delegation of %.2f HP to %s" % (self.config["delegationAmount"], account))
             return False
+        if self.delegation_acc.blockchain.wallet.locked():
+            self.delegation_acc.blockchain.wallet.unlock(self.config["wallet_password"])        
         logger.info("add delegation of %.2f HP to %s" % (self.config["delegationAmount"], account))
         try:
             self.delegation_acc.delegate_vesting_shares(account, self.hive.hp_to_vests(self.config["delegationAmount"]))
@@ -268,7 +288,12 @@ class DelegationOnboardBot:
         return True
 
     def run(self, start_block, stop_block):
-        self.hive.wallet.unlock(self.config["wallet_password"])
+        if self.hive.wallet.locked():
+            self.hive.wallet.unlock(self.config["wallet_password"])
+        if self.hive.wallet.locked():
+            logger.error("Could not unlock wallet. Please check wallet_passowrd in config")
+            return
+                
         current_block = self.blockchain.get_current_block_num()
         if stop_block is None or stop_block > current_block:
             stop_block = current_block
