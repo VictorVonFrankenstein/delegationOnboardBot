@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, date
 from beem.rc import RC
 import time
 import shelve
+from prettytable import PrettyTable
 import json
 import logging
 import logging.config
@@ -393,6 +394,7 @@ def main():
     parser.add_argument("config", help="Config file in JSON format")
     parser.add_argument("--logconfig", help="Logger Config file in JSON format", default='logger.json')
     parser.add_argument("--datadir", help="Data storage dir", default='.')
+    parser.add_argument('--list-accounts', action='store_true')
     args = parser.parse_args()
     
     setup_logging(default_path=args.logconfig)
@@ -432,6 +434,24 @@ def main():
     else:
         start_block = None
         stop_block = None
+    
+    if args.list_accounts:
+        t = PrettyTable(["account", "timestamp", "muted", "hp", "del. hp", "del. timestamp", "rc_comments", "del revoked"])
+        t.align = "l"            
+        for acc_name in data_db["accounts"]:
+            acc = data_db["accounts"][acc_name]
+            if acc["timestamp"] is None:
+                timestamp = ""
+            else:
+                timestamp = formatTimeString(acc["timestamp"])
+            if acc["delegation_timestamp"] is None:
+                del_timestamp = ""
+            else:
+                del_timestamp = formatTimeString(acc["delegation_timestamp"])
+            t.add_row([acc_name, timestamp, acc["muted"], acc["hp"], acc["delegated_hp"], del_timestamp, round(acc["rc_comments"], 3), acc["delegation_revoked"]])
+        print(t)
+        return
+    
     logger.info("starting delegation manager for onboarding..")
     block_counter = None
     last_print_stop_block = stop_block
